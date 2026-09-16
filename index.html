@@ -177,6 +177,13 @@ header::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;he
 .progress-wrap{background:var(--gray-100);border-radius:99px;height:8px;margin-top:6px;}
 .progress-bar{background:var(--green-main);height:8px;border-radius:99px;transition:width 0.4s;}
 
+/* BRANCH MAP POPUP */
+.branch-map-wrap{position:relative;height:360px;background:radial-gradient(circle at 30% 20%,#eff6ff,transparent 60%),linear-gradient(135deg,#dbeafe 0%,#bfdbfe 55%,#bbf7d0 100%);overflow:hidden;}
+.map-pin{transition:transform 0.15s;}
+.map-pin:hover{transform:translate(-50%,-100%) scale(1.12);}
+@keyframes pinBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+@keyframes popupFloat{from{opacity:0;transform:translate(-50%,calc(-100% - 30px)) scale(0.92);}to{opacity:1;transform:translate(-50%,calc(-100% - 46px)) scale(1);}}
+
 /* FOOTER */
 footer{background:var(--green-dark);color:rgba(255,255,255,0.7);text-align:center;padding:16px 24px;font-size:13px;position:fixed;bottom:0;left:0;right:0;z-index:98;}
 footer strong{color:#fff;}
@@ -199,11 +206,17 @@ footer strong{color:#fff;}
 <div class="main-nav">
   <div class="main-nav-inner">
     <button class="active" onclick="showPage('home',this)">🏠 หน้าหลัก</button>
+    <button onclick="showPage('wecare',this)">💚 WECARE</button>
     <button onclick="showPage('coop',this)">🏪 ร้านค้าสหกรณ์</button>
+    <button onclick="showPage('stationery',this)">✏️ ร้านเครื่องเขียน</button>
+    <button onclick="showPage('cafe',this)">☕ ร้านคาเฟ่</button>
+    <button onclick="showPage('journal',this)">📒 สมุดรายวันรับ-จ่าย</button>
+    <button onclick="showPage('assets',this)">🏛️ ทะเบียนทรัพย์สิน</button>
     <button onclick="showPage('tracking',this)">📋 Tracking งาน</button>
     <button onclick="showPage('sheets',this)">📊 Google Sheets</button>
     <button onclick="showPage('branches',this)">🏢 สาขา</button>
     <button onclick="showPage('staff',this)">👥 ทีมงาน</button>
+    <!-- ===== เพิ่มแท็บเมนูในอนาคต: เพิ่มปุ่มแบบนี้ + ดูคำแนะนำที่ LINK_PAGES ในสคริปต์ท้ายไฟล์ ===== -->
   </div>
 </div>
 
@@ -214,24 +227,10 @@ footer strong{color:#fff;}
     <div><div class="date-big" id="todayDate">-</div><div class="date-sub" id="todayTH"></div></div>
     <div class="time-display" id="clockDisplay">00:00:00</div>
   </div>
-  <!-- 3-column grid: sheets | summary | calendar+cert -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 240px 220px;gap:16px;align-items:start;">
+  <!-- 2-column layout: ปฏิทิน | แผนที่สาขา (Interactive Popup) -->
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
 
-    <!-- COL 1: ไฟล์งาน Google Sheets -->
-    <div class="card" style="padding:18px;">
-      <div class="section-title">📊 ไฟล์งาน Google Sheets</div>
-      <div id="sheetsGridHome" style="display:grid;grid-template-columns:1fr;gap:10px;"></div>
-      <button onclick="showPage('sheets',document.querySelector('[onclick*=sheets]'))" style="margin-top:12px;font-size:12px;color:var(--green-main);background:none;border:none;cursor:pointer;font-family:inherit;">→ จัดการไฟล์ทั้งหมด</button>
-    </div>
-
-    <!-- COL 2: สรุปงานวันนี้ -->
-    <div class="card" style="padding:18px;">
-      <div class="section-title">📋 สรุปงานวันนี้</div>
-      <div class="task-stats" id="homeTaskStats" style="grid-template-columns:repeat(2,1fr);"></div>
-      <button onclick="showPage('tracking',document.querySelector('[onclick*=tracking]'))" style="margin-top:12px;font-size:12px;color:var(--green-main);background:none;border:none;cursor:pointer;font-family:inherit;">→ ดู Tracking ทั้งหมด</button>
-    </div>
-
-    <!-- COL 3: ปฏิทิน -->
+    <!-- COL 1: ปฏิทิน -->
     <div class="card">
       <div class="card-header">📅 ปฏิทินประจำเดือน</div>
       <div class="card-body">
@@ -246,14 +245,12 @@ footer strong{color:#fff;}
       </div>
     </div>
 
-    <!-- COL 4: Certificate & ผลงาน -->
-    <div class="card" style="padding:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-        <div class="section-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;font-size:15px;">🏆 Certificate & ผลงาน</div>
-        <button class="btn-green" onclick="openCertModal()" style="padding:6px 12px;font-size:13px;">＋ เพิ่ม</button>
+    <!-- COL 2: แผนที่สาขา (Interactive Pin Popup) -->
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card-header">🗺️ แผนที่สาขาโรงเรียนมารีวิทย์ — คลิกหมุดเพื่อดูรายละเอียด</div>
+      <div id="branchMapWrap" class="branch-map-wrap">
+        <div id="branchMapPins"></div>
       </div>
-      <div id="certGrid" style="display:grid;grid-template-columns:1fr;gap:10px;"></div>
-      <div id="certEmpty" style="text-align:center;padding:24px 10px;color:var(--gray-400);font-size:13px;">ยังไม่มี Certificate — กด ＋ เพิ่ม</div>
     </div>
 
   </div>
@@ -318,6 +315,16 @@ footer strong{color:#fff;}
       <button class="btn-green" onclick="openStaffModal()">＋ เพิ่มพนักงาน</button>
     </div>
     <div class="staff-grid-big" id="staffGrid"></div>
+  </div>
+
+  <!-- Certificate & ผลงาน (ย้ายมาจากหน้าหลัก) -->
+  <div class="card" style="padding:20px;margin-top:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      <div class="section-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;">🏆 Certificate & ผลงาน</div>
+      <button class="btn-green" onclick="openCertModal()" style="padding:6px 12px;font-size:13px;">＋ เพิ่ม</button>
+    </div>
+    <div id="certGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;"></div>
+    <div id="certEmpty" style="text-align:center;padding:24px 10px;color:var(--gray-400);font-size:13px;">ยังไม่มี Certificate — กด ＋ เพิ่ม</div>
   </div>
 </div>
 
@@ -527,6 +534,69 @@ footer strong{color:#fff;}
   </div>
 </div>
 
+<!-- ========== WECARE PAGE ========== -->
+<div class="page" id="page-wecare">
+  <div class="card" style="padding:20px;">
+    <div class="section-title">💚 WECARE</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">แนบลิงก์ Appscript และ Google Sheet ของเมนูนี้ — บันทึกแล้วทีมงานทุกคนที่เปิดลิงก์นี้จะเห็นข้อมูลเดียวกัน</div>
+    <div id="linkPageBody-wecare"></div>
+  </div>
+</div>
+
+<!-- ========== ร้านเครื่องเขียน PAGE ========== -->
+<div class="page" id="page-stationery">
+  <div class="card" style="padding:20px;">
+    <div class="section-title">✏️ ร้านเครื่องเขียน</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">แนบลิงก์ Appscript และ Google Sheet ของเมนูนี้ — บันทึกแล้วทีมงานทุกคนที่เปิดลิงก์นี้จะเห็นข้อมูลเดียวกัน</div>
+    <div id="linkPageBody-stationery"></div>
+  </div>
+</div>
+
+<!-- ========== ร้านคาเฟ่ PAGE ========== -->
+<div class="page" id="page-cafe">
+  <div class="card" style="padding:20px;">
+    <div class="section-title">☕ ร้านคาเฟ่</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">แนบลิงก์ Appscript และ Google Sheet ของเมนูนี้ — บันทึกแล้วทีมงานทุกคนที่เปิดลิงก์นี้จะเห็นข้อมูลเดียวกัน</div>
+    <div id="linkPageBody-cafe"></div>
+  </div>
+</div>
+
+<!-- ========== สมุดรายวันรับ-จ่าย PAGE ========== -->
+<div class="page" id="page-journal">
+  <div class="card" style="padding:20px;">
+    <div class="section-title">📒 สมุดรายวันรับ-จ่าย</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">แนบลิงก์ Appscript และ Google Sheet ของเมนูนี้ — บันทึกแล้วทีมงานทุกคนที่เปิดลิงก์นี้จะเห็นข้อมูลเดียวกัน</div>
+    <div id="linkPageBody-journal"></div>
+  </div>
+</div>
+
+<!-- ========== ทะเบียนทรัพย์สิน PAGE ========== -->
+<div class="page" id="page-assets">
+  <div class="card" style="padding:20px;">
+    <div class="section-title">🏛️ ทะเบียนทรัพย์สิน</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">แนบลิงก์ Appscript และ Google Sheet ของเมนูนี้ — บันทึกแล้วทีมงานทุกคนที่เปิดลิงก์นี้จะเห็นข้อมูลเดียวกัน</div>
+    <div id="linkPageBody-assets"></div>
+  </div>
+</div>
+
+<!-- Link Page Modal (ใช้ร่วมกันทุกเมนู: WECARE / ร้านเครื่องเขียน / ร้านคาเฟ่ / สมุดรายวันรับ-จ่าย / ทะเบียนทรัพย์สิน / เมนูอนาคต) -->
+<div class="overlay" id="linkPageOverlay">
+  <div class="modal">
+    <h3 id="linkPageModalTitle">ตั้งค่าลิงก์</h3>
+    <p class="sub">แนบลิงก์ Appscript และ Google Sheet — บันทึกแล้วทีมงานทุกคนเห็นลิงก์เดียวกัน</p>
+    <label>🔗 ลิงก์ Appscript</label>
+    <input type="url" id="lpAppscriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    <label>📊 ลิงก์ Google Sheet</label>
+    <input type="url" id="lpSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
+    <label>หมายเหตุ (ไม่บังคับ)</label>
+    <input type="text" id="lpNote" placeholder="เช่น อัปเดตทุกวันจันทร์">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeOverlay('linkPageOverlay')">ยกเลิก</button>
+      <button class="btn-save" onclick="saveLinkPageLink()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <footer>
   <strong>โรงเรียนมารีวิทย์ สำนักงานใหญ่ (ชลบุรี)</strong><br>
   137/44 หมู่ที่ 2 ถ.สุขุมวิท เมืองพัทยา ตำบลนาเกลือ อำเภอบางละมุง ชลบุรี 20150
@@ -626,6 +696,8 @@ async function showPage(name,btn){
   if(name==='sheets') renderSheets('sheetsGrid');
   if(name==='coop'){renderCoopGrid();}
   if(name==='home') renderHome();
+  if(name==='staff'){ loadCerts(); }
+  if(LINK_PAGES.some(p=>p.key===name)){ await loadPageLinks(); renderLinkPage(name); }
 }
 
 
@@ -1062,10 +1134,7 @@ setInterval(updateClock,1000); updateClock();
 
 // ===== HOME =====
 function renderHome(){
-  renderSheets('sheetsGridHome',3);
-  const stats=getTaskStats('all');
-  const el=document.getElementById('homeTaskStats');
-  if(el) el.innerHTML=statsHTML(stats);
+  renderBranchMap();
 }
 function getTaskStats(branch){
   const t=branch==='all'?tasks:tasks.filter(x=>x.branch===branch);
@@ -1418,6 +1487,130 @@ function closeOverlay(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');});
 });
+
+// ===== BRANCH MAP (Interactive Pin Popup) =====
+// ปรับแต่งได้ง่าย: เปลี่ยนรูปภาพ (photo) หรือข้อความที่อยู่ (address) ของแต่ละสาขาได้ตรงนี้
+// - top / left คือตำแหน่งหมุดบนแผนที่ (เปอร์เซ็นต์)
+// - photo ถ้าเว้นว่างจะแสดงไอคอน 🏫 แทน ใส่ URL รูปได้ทันที
+const BRANCH_MAP_DATA = [
+  {name:'พัทยา',    top:'58%', left:'58%', photo:'', address:'137/44 หมู่ 2 ถ.สุขุมวิท ต.นาเกลือ อ.บางละมุง จ.ชลบุรี 20150', mapsQuery:'โรงเรียนมารีวิทย์ พัทยา'},
+  {name:'สัตหีบ',   top:'82%', left:'66%', photo:'', address:'อ.สัตหีบ จ.ชลบุรี', mapsQuery:'โรงเรียนมารีวิทย์ สัตหีบ'},
+  {name:'บ่อวิน',   top:'36%', left:'44%', photo:'', address:'อ.ศรีราชา จ.ชลบุรี', mapsQuery:'โรงเรียนมารีวิทย์ บ่อวิน'},
+  {name:'ระยอง',   top:'68%', left:'86%', photo:'', address:'จ.ระยอง', mapsQuery:'โรงเรียนมารีวิทย์ ระยอง'},
+  {name:'บ้านฉาง',  top:'88%', left:'80%', photo:'', address:'อ.บ้านฉาง จ.ระยอง', mapsQuery:'โรงเรียนมารีวิทย์ บ้านฉาง'},
+  {name:'ชัยนาท',   top:'10%', left:'12%', photo:'', address:'จ.ชัยนาท', mapsQuery:'โรงเรียนมารีวิทย์ ชัยนาท'},
+];
+let openMapPinIndex = null;
+function renderBranchMap(){
+  const wrap = document.getElementById('branchMapPins');
+  if(!wrap) return;
+  wrap.innerHTML = BRANCH_MAP_DATA.map((b,i)=>`
+    <div class="map-pin" style="position:absolute;top:${b.top};left:${b.left};transform:translate(-50%,-100%);cursor:pointer;z-index:2;text-align:center;" onclick="toggleMapPopup(${i},event)">
+      <div style="font-size:30px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35));animation:pinBounce 2s ease-in-out infinite;">📍</div>
+      <div style="background:rgba(255,255,255,0.92);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;color:var(--green-dark);white-space:nowrap;margin-top:-4px;display:inline-block;">${BRANCH_ICONS[b.name]||''} ${b.name}</div>
+    </div>`).join('');
+}
+function toggleMapPopup(i, e){
+  if(e) e.stopPropagation();
+  const old = document.getElementById('mapPopup');
+  if(old) old.remove();
+  if(openMapPinIndex === i){ openMapPinIndex = null; return; }
+  openMapPinIndex = i;
+  const b = BRANCH_MAP_DATA[i];
+  const mapsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(b.mapsQuery || b.address || b.name);
+  const pop = document.createElement('div');
+  pop.id = 'mapPopup';
+  pop.style.cssText = `position:absolute;top:${b.top};left:${b.left};transform:translate(-50%,calc(-100% - 46px));z-index:10;width:210px;background:#fff;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.28);overflow:hidden;animation:popupFloat 0.22s ease;`;
+  pop.innerHTML = `
+    ${b.photo
+      ? `<img src="${b.photo}" style="width:100%;height:96px;object-fit:cover;display:block;">`
+      : `<div style="width:100%;height:96px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));display:flex;align-items:center;justify-content:center;font-size:34px;">🏫</div>`}
+    <div style="padding:10px 12px;">
+      <div style="font-weight:700;font-size:13px;color:var(--green-dark);margin-bottom:4px;">🏫 สาขา${b.name}</div>
+      <div style="font-size:11px;color:var(--gray-400);margin-bottom:9px;line-height:1.45;">${b.address||''}</div>
+      <a href="${mapsUrl}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:5px;padding:7px;background:var(--green-main);color:#fff;border-radius:7px;text-decoration:none;font-size:12px;font-weight:600;">🧭 เปิด Google Maps</a>
+    </div>
+    <div style="position:absolute;bottom:-6px;left:50%;width:12px;height:12px;background:#fff;transform:translateX(-50%) rotate(45deg);"></div>`;
+  document.getElementById('branchMapWrap').appendChild(pop);
+}
+document.addEventListener('click', (e)=>{
+  if(openMapPinIndex !== null && !e.target.closest('#mapPopup') && !e.target.closest('.map-pin')){
+    const p = document.getElementById('mapPopup'); if(p) p.remove();
+    openMapPinIndex = null;
+  }
+});
+
+// ===== LINK PAGES (WECARE / ร้านเครื่องเขียน / ร้านคาเฟ่ / สมุดรายวันรับ-จ่าย / ทะเบียนทรัพย์สิน / อนาคต) =====
+// ทุกเมนูด้านล่างนี้ใช้โครงสร้างเดียวกัน: ลิงก์ Appscript (บน) + ลิงก์ Google Sheet (ล่าง)
+// บันทึกผ่าน backend (apiSave sheet='pagelinks') จึงแชร์ลิงก์เดียวกันให้ทีมงานทุกคนเห็นตรงกัน
+//
+// วิธีเพิ่มแท็บเมนูใหม่ในอนาคต:
+// 1) เพิ่มปุ่มเมนูใน .main-nav-inner: <button onclick="showPage('yourkey',this)">🔖 ชื่อเมนู</button>
+// 2) เพิ่ม <div class="page" id="page-yourkey"> ที่มี <div id="linkPageBody-yourkey"></div> ข้างใน (ก็อปจากบล็อก WECARE)
+// 3) เพิ่ม {key:'yourkey', title:'ชื่อเมนู', icon:'🔖'} ในอาเรย์ LINK_PAGES ด้านล่างนี้ — เสร็จแล้ว ระบบจะจัดการโหลด/บันทึกลิงก์ให้อัตโนมัติ
+const LINK_PAGES = [
+  {key:'wecare',     title:'WECARE',                icon:'💚'},
+  {key:'stationery', title:'ร้านเครื่องเขียน',       icon:'✏️'},
+  {key:'cafe',       title:'ร้านคาเฟ่',              icon:'☕'},
+  {key:'journal',    title:'สมุดรายวันรับ-จ่าย',     icon:'📒'},
+  {key:'assets',     title:'ทะเบียนทรัพย์สิน',       icon:'🏛️'},
+];
+let pageLinks = {};
+let editingLinkPageKey = null;
+
+async function loadPageLinks(){
+  const rows = await apiGet('pagelinks');
+  pageLinks = {};
+  (rows||[]).forEach(r=>{
+    if(r.id) pageLinks[r.id] = {appscriptUrl:r.appscriptUrl||'', sheetUrl:r.sheetUrl||'', note:r.note||''};
+  });
+}
+
+function renderLinkPage(key){
+  const el = document.getElementById('linkPageBody-'+key);
+  if(!el) return;
+  const d = pageLinks[key] || {};
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;max-width:560px;">
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:10px;">🔗 ลิงก์ Appscript</div>
+        ${d.appscriptUrl
+          ? `<a href="${d.appscriptUrl}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;">🚀 เปิด Appscript ↗</a>`
+          : `<button onclick="openLinkPageModal('${key}')" style="width:100%;padding:10px;border:1px dashed var(--gray-200);border-radius:8px;background:none;cursor:pointer;font-size:13px;color:var(--gray-400);font-family:inherit;">+ แนบลิงก์ Appscript</button>`}
+      </div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:10px;">📊 ลิงก์ Google Sheet</div>
+        ${d.sheetUrl
+          ? `<a href="${d.sheetUrl}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:var(--green-main);color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;">📊 เปิด Google Sheet ↗</a>`
+          : `<button onclick="openLinkPageModal('${key}')" style="width:100%;padding:10px;border:1px dashed var(--gray-200);border-radius:8px;background:none;cursor:pointer;font-size:13px;color:var(--gray-400);font-family:inherit;">+ แนบลิงก์ Google Sheet</button>`}
+      </div>
+      ${d.note ? `<div style="font-size:12px;color:var(--gray-400);">📝 ${d.note}</div>` : ''}
+      <button class="btn-green" onclick="openLinkPageModal('${key}')" style="align-self:flex-start;">✏️ แก้ไขลิงก์</button>
+    </div>`;
+}
+
+function openLinkPageModal(key){
+  editingLinkPageKey = key;
+  const cfg = LINK_PAGES.find(p=>p.key===key);
+  const d = pageLinks[key] || {};
+  document.getElementById('linkPageModalTitle').textContent = 'ตั้งค่าลิงก์ — ' + (cfg ? cfg.title : key);
+  document.getElementById('lpAppscriptUrl').value = d.appscriptUrl || '';
+  document.getElementById('lpSheetUrl').value = d.sheetUrl || '';
+  document.getElementById('lpNote').value = d.note || '';
+  openOverlay('linkPageOverlay');
+}
+
+async function saveLinkPageLink(){
+  const appscriptUrl = document.getElementById('lpAppscriptUrl').value.trim();
+  const sheetUrl = document.getElementById('lpSheetUrl').value.trim();
+  const note = document.getElementById('lpNote').value.trim();
+  pageLinks[editingLinkPageKey] = {appscriptUrl, sheetUrl, note};
+  renderLinkPage(editingLinkPageKey);
+  closeOverlay('linkPageOverlay');
+  showLoading('💾 กำลังบันทึก...');
+  await apiSave('pagelinks', {id:editingLinkPageKey, appscriptUrl, sheetUrl, note});
+  hideLoading();
+}
 
 // ===== INIT =====
 loadAllData();
