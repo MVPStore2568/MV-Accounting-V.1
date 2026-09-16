@@ -223,14 +223,36 @@ header::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;he
 /* BRANCH MAP POPUP (แผนที่ประเทศไทย 3D) */
 .branch-map-wrap {
   position: relative;
-  height: 520px; /* เพิ่มความสูงเพื่อให้เข้ากับรูปแผนที่ทรงสูง */
-  background-image: url('https://www.google.com/imgres?q=%E0%B8%A3%E0%B8%B9%E0%B8%9B%20%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%97%E0%B8%B5%E0%B9%88%203%20%E0%B8%A1%E0%B8%B4%E0%B8%95%E0%B8%B4&imgurl=https%3A%2F%2Flookaside.fbsbx.com%2Flookaside%2Fcrawler%2Fmedia%2F%3Fmedia_id%3D778172748164420&imgrefurl=https%3A%2F%2Fwww.facebook.com%2FKruBasIT%2Fposts%2F%25E0%25B9%2581%25E0%25B8%259C%25E0%25B8%2599%25E0%25B8%2597%25E0%25B8%25B5%25E0%25B9%2588%25E0%25B8%259B%25E0%25B8%25A3%25E0%25B8%25B0%25E0%25B9%2580%25E0%25B8%2597%25E0%25B8%25A8%25E0%25B9%2584%25E0%25B8%2597%25E0%25B8%25A2-%25E0%25B8%25A3%25E0%25B8%25B9%25E0%25B8%259B%25E0%25B9%2581%25E0%25B8%259A%25E0%25B8%259A%25E0%25B8%25AA%25E0%25B8%25B2%25E0%25B8%25A1%25E0%25B8%25A1%25E0%25B8%25B4%25E0%25B8%2595%25E0%25B8%25B4%2F778172854831076%2F&docid=V1ddWKVPKJCG0M&tbnid=CvT6WYoyE59oAM&vet=12ahUKEwjXqqWtnPKWAxUtb2wGHTivEI0QnPAOegUIrwEQAA..i&w=832&h=1248&hcb=2&ved=2ahUKEwjXqqWtnPKWAxUtb2wGHTivEI0QnPAOegUIrwEQAA'); /* หรือใส่ชื่อไฟล์ เช่น thailand-map.jpg */
+  height: 520px;
+  background-image: url('ใส่_URL_รูปภาพแผนที่ประเทศไทย');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  background-color: #dceef5; /* สีพื้นหลังคุมโทนฟ้าอ่อนให้เนียนกับภาพ */
+  background-color: #dceef5;
   border-radius: 12px;
-  overflow: visible; /* ป้องกันหัวหมุดโดนตัดขอบ */
+  overflow: visible;
+}
+
+/* 1. กำหนดท่าทางขยับขึ้น-ลง */
+@keyframes pinBounce {
+  0%, 100% {
+    transform: translate(-50%, -100%); /* ตำแหน่งปกติ */
+  }
+  50% {
+    transform: translate(-50%, -115%); /* ขยับลอยขึ้นด้านบน */
+  }
+}
+
+/* 2. ใส่แอนิเมชันให้กับหมุด */
+.map-pin {
+  transition: transform 0.2s ease;
+  animation: pinBounce 2s ease-in-out infinite; /* เคลื่อนไหวต่อเนื่องวนลูป */
+}
+
+/* 3. เมื่อเอาเมาส์ชี้ ให้หยุดลอยแล้วขยายขนาดเล็กน้อย */
+.map-pin:hover {
+  animation-play-state: paused;
+  transform: translate(-50%, -100%) scale(1.2) !important;
 }
 /* FOOTER */
 footer{background:var(--green-dark);color:rgba(255,255,255,0.7);text-align:center;padding:16px 24px;font-size:13px;position:fixed;bottom:0;left:0;right:0;z-index:98;}
