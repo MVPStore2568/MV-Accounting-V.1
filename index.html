@@ -29,10 +29,53 @@ header::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;he
 .header-text p{font-size:13px;color:rgba(255,255,255,0.75);margin-top:2px;}
 
 /* MAIN TABS NAV */
-.main-nav{background:rgba(10,92,62,0.8);border-top:1px solid rgba(255,255,255,0.15);position:fixed;top:102px;left:0;right:0;z-index:99;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
-.main-nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;gap:2px;overflow-x:auto;}
-.main-nav-inner button{display:inline-flex;align-items:center;gap:6px;padding:12px 16px;color:rgba(255,255,255,0.75);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:15px;font-weight:500;white-space:nowrap;font-family:inherit;transition:all 0.2s;}
-.main-nav-inner button:hover,.main-nav-inner button.active{color:#fff;border-bottom-color:var(--gold);}
+.main-nav {
+  background: rgba(10, 92, 62, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  position: fixed;
+  top: 102px;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.main-nav-inner {
+  width: 100%;             /* ขยายเต็มหน้าจอ 100% */
+  max-width: 100%;         /* เอาการจำกัด 1200px ออก */
+  margin: 0;
+  padding: 0 12px;
+  display: flex;
+  gap: 2px;
+  overflow-x: hidden;      /* ปิดการเลื่อนสกรอลล์ซ้าย-ขวา */
+  justify-content: space-between; /* กระจายปุ่มให้เต็มความกว้าง */
+}
+
+.main-nav-inner button {
+  flex: 1;                 /* ให้ทุกปุ่มขยายความกว้างเท่าๆ กันจนเต็มจอ */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center; /* จัดข้อความให้อยู่ตรงกลางปุ่ม */
+  gap: 6px;
+  padding: 12px 6px;       /* ลด padding ข้างลงเล็กน้อยเพื่อไม่ให้ล้นหน้าจอ */
+  color: rgba(255, 255, 255, 0.75);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px;         /* ปรับขนาดตัวอักษรให้พอดีกับความกว้างจอ */
+  font-weight: 500;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.main-nav-inner button:hover,
+.main-nav-inner button.active {
+  color: #fff;
+  border-bottom-color: var(--gold);
+}
 
 /* PAGE SECTIONS */
 .page{display:none;max-width:1200px;margin:24px auto;padding:0 24px;}
