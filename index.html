@@ -178,12 +178,14 @@ header::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;he
 .progress-bar{background:var(--green-main);height:8px;border-radius:99px;transition:width 0.4s;}
 
 /* BRANCH MAP POPUP */
-.branch-map-wrap{position:relative;height:360px;background:radial-gradient(circle at 30% 20%,#eff6ff,transparent 60%),linear-gradient(135deg,#dbeafe 0%,#bfdbfe 55%,#bbf7d0 100%);overflow:hidden;}
-.map-pin{transition:transform 0.15s;}
-.map-pin:hover{transform:translate(-50%,-100%) scale(1.12);}
-@keyframes pinBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-@keyframes popupFloat{from{opacity:0;transform:translate(-50%,calc(-100% - 30px)) scale(0.92);}to{opacity:1;transform:translate(-50%,calc(-100% - 46px)) scale(1);}}
-
+.branch-map-wrap {
+  position: relative;
+  height: 480px; /* เพิ่มความสูงจาก 360px เป็น 480px ให้แผนที่ใหญ่สะใจขึ้น */
+  background: radial-gradient(circle at 30% 20%,#eff6ff,transparent 60%),
+              linear-gradient(135deg,#dbeafe 0%,#bfdbfe 55%,#bbf7d0 100%);
+  overflow: visible; /* เปลี่ยนจาก hidden เป็น visible เพื่อไม่ให้หมุดโดนตัดขอบ */
+  padding-top: 20px; /* ดันพื้นที่ลงมาเล็กน้อยกันหมุดชิดขอบบนเกินไป */
+}
 /* FOOTER */
 footer{background:var(--green-dark);color:rgba(255,255,255,0.7);text-align:center;padding:16px 24px;font-size:13px;position:fixed;bottom:0;left:0;right:0;z-index:98;}
 footer strong{color:#fff;}
