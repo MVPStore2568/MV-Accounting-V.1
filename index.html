@@ -1611,21 +1611,39 @@ function genLinkId(){
   return 'lnk_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
 }
 
+// หมายเหตุสำคัญ: backend (Google Apps Script sheet 'pagelinks') รู้จักแค่คอลัมน์เดิมที่มีอยู่แล้วคือ
+// id / appscriptUrl / sheetUrl / note เท่านั้น — ถ้าส่งฟิลด์ใหม่ที่ backend ไม่รู้จัก (เช่น "links") ไปตรงๆ
+// มันจะถูกทิ้งเงียบๆ ไม่ถูกบันทึกจริง (นี่คือสาเหตุที่ลิงก์ที่เพิ่มไว้ "หาย" ไปหลังรีเฟรช/สลับเมนู)
+// วิธีแก้: เก็บอาเรย์ลิงก์ทั้งหมดเป็น JSON string ไว้ใน "note" ซึ่งเป็นคอลัมน์ที่มีอยู่แล้วและถูกบันทึกจริงเสมอ
+const LINKS_NOTE_PREFIX = '__LINKS_JSON__';
+
+function decodeLinksFromRow(r){
+  let list = [];
+  // 1) ลองอ่านจาก note ก่อน (ที่เก็บจริงตอนนี้)
+  if(r.note && typeof r.note === 'string' && r.note.startsWith(LINKS_NOTE_PREFIX)){
+    try{
+      const parsed = JSON.parse(r.note.slice(LINKS_NOTE_PREFIX.length));
+      if(Array.isArray(parsed)) list = parsed;
+    }catch(e){ list = []; }
+  }
+  // 2) เผื่อกรณี backend รุ่นถัดไปรองรับฟิลด์ "links" ตรงๆ ได้แล้ว ให้ใช้อันนี้ทับได้เลยถ้ามี
+  else if(r.links){
+    try{ const parsed = JSON.parse(r.links); if(Array.isArray(parsed)) list = parsed; }catch(e){ list = []; }
+  }
+  // 3) migrate ข้อมูลรูปแบบเก่าสุด (ลิงก์ Appscript/Sheet แบบตายตัว หรือ note เป็นข้อความธรรมดา) ไม่ให้หาย
+  else if(r.appscriptUrl || r.sheetUrl){
+    if(r.appscriptUrl) list.push({id:genLinkId(), name:'ลิงก์ Appscript', url:r.appscriptUrl});
+    if(r.sheetUrl) list.push({id:genLinkId(), name:'ลิงก์ Google Sheet', url:r.sheetUrl});
+  }
+  return list.map(it=>({id: it.id || genLinkId(), name: it.name || '', url: it.url || ''}));
+}
+
 async function loadPageLinks(){
   const rows = await apiGet('pagelinks');
   const fresh = {};
   (rows||[]).forEach(r=>{
     if(!r.id) return;
-    let list = [];
-    if(r.links){
-      // รูปแบบใหม่: อาเรย์ของลิงก์ เก็บเป็น JSON string ในฟิลด์ links ของแถวนี้ (แถวนี้ผูกกับเมนู r.id เท่านั้น)
-      try{ const parsed = JSON.parse(r.links); if(Array.isArray(parsed)) list = parsed; }catch(e){ list = []; }
-    } else if(r.appscriptUrl || r.sheetUrl){
-      // migrate ข้อมูลรูปแบบเก่า (ลิงก์ Appscript/Sheet แบบตายตัว) ให้กลายเป็นรายการในลิสต์ใหม่ ไม่ให้ข้อมูลเดิมหาย
-      if(r.appscriptUrl) list.push({id:genLinkId(), name:'ลิงก์ Appscript', url:r.appscriptUrl});
-      if(r.sheetUrl) list.push({id:genLinkId(), name:'ลิงก์ Google Sheet', url:r.sheetUrl});
-    }
-    fresh[r.id] = list.map(it=>({id: it.id || genLinkId(), name: it.name || '', url: it.url || ''}));
+    fresh[r.id] = decodeLinksFromRow(r);
   });
   pageLinks = fresh; // สร้างใหม่ทั้งหมดจากข้อมูลจริงบน backend ทุกครั้ง — คีย์ของเมนูไหนก็อยู่ในช่องของเมนูนั้นเท่านั้น
 }
@@ -1711,9 +1729,12 @@ async function moveLinkItem(key, itemId, dir){
 }
 
 // บันทึกอาเรย์ลิงก์ของเมนู "key" กลับไปที่ backend เป็น 1 แถวต่อ 1 เมนู (id = key) — ไม่แตะแถวของเมนูอื่นเลย
+// ใส่ JSON ไว้ใน note (คอลัมน์ที่ backend รู้จักและบันทึกจริง) และคง links ไว้ด้วยเผื่อ backend รองรับฟิลด์นี้ในอนาคต
 async function persistLinkList(key){
   showLoading('💾 กำลังบันทึก...');
-  await apiSave('pagelinks', {id:key, links: JSON.stringify(pageLinks[key] || [])});
+  const arr = pageLinks[key] || [];
+  const encodedNote = LINKS_NOTE_PREFIX + JSON.stringify(arr);
+  await apiSave('pagelinks', {id:key, appscriptUrl:'', sheetUrl:'', note: encodedNote, links: JSON.stringify(arr)});
   hideLoading();
 }
 
