@@ -234,6 +234,7 @@ footer{background:var(--green-dark);color:rgba(255,255,255,0.7);text-align:cente
 footer strong{color:#fff;}
 
 @media(max-width:768px){.two-col{grid-template-columns:1fr;}.task-stats{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:1100px){.home-grid-3col{grid-template-columns:1fr !important;}}
 </style>
 </head>
 <body>
@@ -270,10 +271,18 @@ footer strong{color:#fff;}
     <div><div class="date-big" id="todayDate">-</div><div class="date-sub" id="todayTH"></div></div>
     <div class="time-display" id="clockDisplay">00:00:00</div>
   </div>
-  <!-- 2-column layout: ปฏิทิน | แผนที่สาขา (Interactive Popup) -->
-  <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
+  <!-- 3-column layout: แผนที่สาขา | ปฏิทิน | วันหยุดพนักงาน (PDF) -->
+  <div class="home-grid-3col" style="display:grid;grid-template-columns:1fr 260px 300px;gap:14px;align-items:start;">
 
-    <!-- COL 1: ปฏิทิน -->
+    <!-- COL 1: แผนที่สาขา (Interactive Pin Popup) -->
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card-header">🗺️ แผนที่สาขาโรงเรียนมารีวิทย์ — คลิกหมุดเพื่อดูรายละเอียด</div>
+      <div id="branchMapWrap" class="branch-map-wrap">
+        <div id="branchMapPins"></div>
+      </div>
+    </div>
+
+    <!-- COL 2: ปฏิทิน -->
     <div class="card">
       <div class="card-header">📅 ปฏิทินประจำเดือน</div>
       <div class="card-body">
@@ -288,11 +297,15 @@ footer strong{color:#fff;}
       </div>
     </div>
 
-    <!-- COL 2: แผนที่สาขา (Interactive Pin Popup) -->
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div class="card-header">🗺️ แผนที่สาขาโรงเรียนมารีวิทย์ — คลิกหมุดเพื่อดูรายละเอียด</div>
-      <div id="branchMapWrap" class="branch-map-wrap">
-        <div id="branchMapPins"></div>
+    <!-- COL 3: วันหยุดพนักงานโรงเรียน (PDF Viewer) -->
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="card-header">📄 วันหยุดพนักงานโรงเรียน (PDF)</div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:8px;padding:10px;flex:1;">
+        <input type="file" id="holidayPdfInput" accept="application/pdf" style="font-size:12px;">
+        <div id="holidayPdfEmpty" style="flex:1;min-height:420px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--gray-400);font-size:12px;border:1px dashed var(--gray-200);border-radius:8px;padding:10px;">
+          ยังไม่ได้เลือกไฟล์ PDF<br>วันหยุดพนักงานโรงเรียน
+        </div>
+        <iframe id="holidayPdfFrame" style="display:none;flex:1;min-height:420px;width:100%;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-50);"></iframe>
       </div>
     </div>
 
@@ -1161,6 +1174,18 @@ function renderCalendar(){
 }
 document.getElementById('prevMonth').onclick=()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();};
 document.getElementById('nextMonth').onclick=()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();};
+
+// ===== HOLIDAY PDF VIEWER (หน้าหลัก) =====
+document.getElementById('holidayPdfInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  const frame = document.getElementById('holidayPdfFrame');
+  const empty = document.getElementById('holidayPdfEmpty');
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  frame.src = url;
+  frame.style.display = 'block';
+  empty.style.display = 'none';
+});
 
 // ===== CLOCK =====
 function updateClock(){
