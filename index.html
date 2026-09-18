@@ -297,15 +297,15 @@ footer strong{color:#fff;}
       </div>
     </div>
 
-    <!-- COL 3: วันหยุดพนักงานโรงเรียน (PDF Viewer) -->
+    <!-- COL 3: วันหยุดพนักงานโรงเรียน (รูปภาพ - เห็นทุกคน) -->
     <div class="card" style="display:flex;flex-direction:column;">
-      <div class="card-header">📄 วันหยุดพนักงานโรงเรียน (PDF)</div>
+      <div class="card-header">🖼️ วันหยุดพนักงานโรงเรียน</div>
       <div class="card-body" style="display:flex;flex-direction:column;gap:8px;padding:10px;flex:1;">
-        <input type="file" id="holidayPdfInput" accept="application/pdf" style="font-size:12px;">
-        <div id="holidayPdfEmpty" style="flex:1;min-height:420px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--gray-400);font-size:12px;border:1px dashed var(--gray-200);border-radius:8px;padding:10px;">
-          ยังไม่ได้เลือกไฟล์ PDF<br>วันหยุดพนักงานโรงเรียน
+        <input type="file" id="holidayImgInput" accept="image/*" style="font-size:12px;" onchange="saveHolidayImage(this.files[0])">
+        <div id="holidayImgEmpty" style="flex:1;min-height:420px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--gray-400);font-size:12px;border:1px dashed var(--gray-200);border-radius:8px;padding:10px;">
+          ยังไม่ได้อัปโหลดรูปภาพ<br>วันหยุดพนักงานโรงเรียน
         </div>
-        <iframe id="holidayPdfFrame" style="display:none;flex:1;min-height:420px;width:100%;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-50);"></iframe>
+        <img id="holidayImgPreview" src="" style="display:none;flex:1;min-height:420px;max-height:600px;width:100%;object-fit:contain;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-50);cursor:zoom-in;" onclick="openLightbox(this.src)">
       </div>
     </div>
 
@@ -727,6 +727,7 @@ async function loadAllData(){
     nextSheetId=Math.max(...sheets.map(s=>s.id),0)+1;
   }catch(e){console.error('loadAllData error',e);}
   await loadCerts();
+  loadHolidayImage();
   hideLoading();
   renderCalendar();renderHome();renderTasks();
 }
@@ -1175,17 +1176,38 @@ function renderCalendar(){
 document.getElementById('prevMonth').onclick=()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();};
 document.getElementById('nextMonth').onclick=()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();};
 
-// ===== HOLIDAY PDF VIEWER (หน้าหลัก) =====
-document.getElementById('holidayPdfInput').addEventListener('change', function(e){
-  const file = e.target.files[0];
-  const frame = document.getElementById('holidayPdfFrame');
-  const empty = document.getElementById('holidayPdfEmpty');
+// ===== HOLIDAY IMAGE (หน้าหลัก — บันทึกเข้า Google Sheets เพื่อให้ทุกคนเห็น) =====
+function showHolidayImage(src){
+  const img = document.getElementById('holidayImgPreview');
+  const empty = document.getElementById('holidayImgEmpty');
+  if(src){
+    img.src = src;
+    img.style.display = 'block';
+    empty.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    empty.style.display = 'flex';
+  }
+}
+async function loadHolidayImage(){
+  try{
+    const data = await apiGet('settings');
+    const row = data.find(r=>String(r.id)==='1');
+    showHolidayImage(row ? row.holidayImage||'' : '');
+  }catch(e){console.error('loadHolidayImage error',e);}
+}
+async function saveHolidayImage(file){
   if(!file) return;
-  const url = URL.createObjectURL(file);
-  frame.src = url;
-  frame.style.display = 'block';
-  empty.style.display = 'none';
-});
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    const dataUrl = e.target.result;
+    showHolidayImage(dataUrl);
+    showLoading('💾 กำลังบันทึกรูปภาพ...');
+    await apiSave('settings', {id:1, holidayImage: dataUrl});
+    hideLoading();
+  };
+  reader.readAsDataURL(file);
+}
 
 // ===== CLOCK =====
 function updateClock(){
